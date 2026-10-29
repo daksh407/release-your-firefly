@@ -23,11 +23,11 @@
     ],
     "full_stream": "Firefly-full-stream.mp4",
     "short_stream": "Firefly-15s-stream.mp4",
-    "audio": "Voice-led mix; ten quiet tactile cues; curved fades on every cue and on the music bed",
-    "full_stream_bytes": 4271520,
-    "full_stream_sha256": "37bbf0fcd32bbfb2719fd409040b668c3d90a6d4e9608cc634218407d3041025",
-    "short_stream_bytes": 981880,
-    "short_stream_sha256": "6af27b743de6541d6d85427417a8b83dce267e7a0871813875ea5041e8d0ac1e"
+    "audio": "Restored 37 original action cues, including both keyboard passages and pencil writing, with balanced levels and curved fades",
+    "full_stream_bytes": 4278929,
+    "full_stream_sha256": "959fc5ca47c9ad7c2a9b11edf589975cd46777f9e46ec91b3c70ac3ab1e08b58",
+    "short_stream_bytes": 986769,
+    "short_stream_sha256": "d50d9e1a1266704e48d06ff928835a3a3bde6c63ec9c573a8988be0c90a53887"
   },
   "revision": "Workshops, open talks, brainstorming and personal design feedback; conversational first-person copy"
 }

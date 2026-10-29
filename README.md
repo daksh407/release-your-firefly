@@ -73,4 +73,4 @@ The published entry page now uses four shared, compressed artwork files and a se
 
 On phones, drag to move and pinch to zoom. Explore campus opens a searchable building list, a whole-campus reset and a sample firefly shortcut. Turning has explicit buttons; the touch view keeps a steady tilt. A loading screen offers recovery instructions for camera scanner browsers. The QR address is unchanged and has been decoded from the final streamed film to verify it.
 
-The film player uses 720p fast-start versions, with HD downloads available separately. The short cut waits until play before downloading. Both mixes use quiet tactile cues and curved fades; the old heartbeat, pop, sparkle, riser and impact layers have been removed.
+The film player uses 720p fast-start versions, with HD downloads available separately. The short cut waits until play before downloading. Both mixes retain the original action sound design, including typing, pencil marks, taps, paper, whooshes, launch, Glow, constellation and title cues. All 37 cues have balanced levels and curved fades.
