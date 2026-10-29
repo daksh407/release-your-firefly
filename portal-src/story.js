@@ -542,7 +542,7 @@ const STORY = (() => {
     setTimeout(() => { const tk = $('.tk1', el); spring(0, [.6, 1], v => tk.textContent = String(Math.round(v)).padStart(2, '0'), .3).set(0).to(mine); }, 1050);
     const after = () => setTimeout(() => notify({ ico: 'glow-filled', av: DEMO.makers[1], title: 'Demo: someone glowed your firefly', sub: `${SW[DEMO.makers[1].sw].name} swarm · just now`, go: inbox, glow: d }), 2200);
     el._act = { see: () => { close(el); UI.camGo(ff.p, Math.max(camera.zoom, 4.6), 0); after(); },
-      share: () => { const t = { title: 'Release Your Firefly', text: `I released a firefly over ${UI.bname(d.b)}. Concept demonstration.` }; if (navigator.share) navigator.share(t).catch(() => {}); else UI.toast('Link copied', 'share'); } }; }
+      share: () => { const t = { title: 'Release the Firefly', text: `I released a firefly over ${UI.bname(d.b)}. Concept demonstration.` }; if (navigator.share) navigator.share(t).catch(() => {}); else UI.toast('Link copied', 'share'); } }; }
 
   /* ================= 4. notifications + inbox ================= */
   const NOTES = [

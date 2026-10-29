@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Release Your Firefly</title>
+<title>Release the Firefly</title>
 <meta name="theme-color" content="#0b0d26">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +33,7 @@ body.night .t b em{color:var(--glow)}
 .n{position:fixed;z-index:2;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));font:600 11px var(--body);color:var(--muted);background:rgba(11,13,38,.6);border:1px solid rgba(255,241,214,.16);padding:6px 10px;border-radius:999px;pointer-events:none}
 </style>
 <canvas id="gl" tabindex="0" aria-label="Isometric night model of Chitkara University, Punjab. Drag to turn, pinch or scroll to zoom, two fingers to pan."></canvas>
-<div class="t"><b>Release Your <em>Firefly</em></b><span>Chitkara University, Punjab</span></div>
+<div class="t"><b>Release the <em>Firefly</em></b><span>Chitkara University, Punjab</span></div>
 <div class="n">Drag to turn · two fingers to move · pinch to zoom</div>
 <div class="ctl"><button id="rl" aria-label="Turn left"><svg viewBox="0 0 24 24"><path d="M9 5 4 10l5 5"/><path d="M4 10h9a6 6 0 0 1 0 12h-2"/></svg></button><button id="hm" aria-label="Back to the whole campus"><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg></button><button id="nt" aria-label="Switch day and night"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg></button><button id="rr" aria-label="Turn right"><svg viewBox="0 0 24 24"><path d="m15 5 5 5-5 5"/><path d="M20 10h-9a6 6 0 0 0 0 12h2"/></svg></button></div>
 
@@ -1673,7 +1673,7 @@ const UI = (() => {
   app.innerHTML = `
   <div class="vig"></div>
   <div class="anchors"></div>
-  <header class="top"><div class="mark"><span class="lg">${kit('logo-mark')}</span><div><b>Release Your <em>Firefly</em></b><small>designed by Daksh · GPT concept art</small></div></div><div class="tr pe"></div></header>
+  <header class="top"><div class="mark"><span class="lg">${kit('logo-mark')}</span><div><b>Release the <em>Firefly</em></b><small>designed by Daksh · GPT concept art</small></div></div><div class="tr pe"></div></header>
   <div class="clockchip"><span class="chip">${ic('clock')}9:00 PM</span></div>
   <div class="scrim"></div>
   <div class="col">
@@ -1739,7 +1739,7 @@ const UI = (() => {
   <div class="toasts" role="status" aria-live="polite"></div>
   <div class="confs"></div>
   <div class="ghosts"></div>
-  <div class="intro" hidden><span class="lt">${kit('logo-tile')}</span><h1>Release your firefly.</h1><p>Make something. Find your people.</p><small>Chitkara University, Punjab</small></div>
+  <div class="intro" hidden><span class="lt">${kit('logo-tile')}</span><h1>Release the Firefly.</h1><p>Make something. Find your people.</p><small>Chitkara University, Punjab</small></div>
   <div class="finger"></div>`;
   $('.tr', app).appendChild($('.ctl'));
   const anchors = $('.anchors', app), ghosts = $('.ghosts', app);
@@ -2292,7 +2292,7 @@ const POLISH = (() => {
  return {snapshot,restore,init};
 })();
 /* ================= the campaign: a 14-day window and a leaderboard of connections =================
-   The portal is one part of the "Release Your Firefly" campaign: it is open for 14 days, then the board locks on Swarm Night.
+   The portal is one part of the "Release the Firefly" campaign: it is open for 14 days, then the board locks on Swarm Night.
    The board ranks makers by Glows received during the 14 days. Who glowed whom stays private; totals and first names only; anyone can hide.
    Demo: #day=N sets the campaign day (default 6). All counts are sample data. */
 const CAMP = (() => {
@@ -2365,7 +2365,7 @@ const CAMP = (() => {
 
   /* header card on the map */
   function header() { const mk = document.querySelector('#app .mark'); if (!mk) return;
-    mk.innerHTML = `<button class="campcard" data-press aria-label="Campaign day ${day} of ${DAYS}. Open the leaderboard"><span class="lg">${KIT['logo-mark']}</span><span><b>Release Your Firefly</b><span class="sg">${segs()}</span><small>Demo day ${day} of ${DAYS} · ${left ? left + ' days left' : 'last day'}</small></span></button>`;
+    mk.innerHTML = `<button class="campcard" data-press aria-label="Campaign day ${day} of ${DAYS}. Open the leaderboard"><span class="lg">${KIT['logo-mark']}</span><span><b>Release the Firefly</b><img src="brand/adobe-chitkara.png" alt="Adobe × Chitkara University" style="display:block;width:146px;height:31px;object-fit:contain;background:white;margin:5px 0;border-radius:3px"><span class="sg">${segs()}</span><small>Demo day ${day} of ${DAYS} · ${left ? left + ' days left' : 'last day'}</small></span></button>`;
     mk.querySelector('.campcard').addEventListener('click', () => board()); }
 
   /* the leaderboard */
@@ -2953,7 +2953,7 @@ const STORY = (() => {
     setTimeout(() => { const tk = $('.tk1', el); spring(0, [.6, 1], v => tk.textContent = String(Math.round(v)).padStart(2, '0'), .3).set(0).to(mine); }, 1050);
     const after = () => setTimeout(() => notify({ ico: 'glow-filled', av: DEMO.makers[1], title: 'Demo: someone glowed your firefly', sub: `${SW[DEMO.makers[1].sw].name} swarm · just now`, go: inbox, glow: d }), 2200);
     el._act = { see: () => { close(el); UI.camGo(ff.p, Math.max(camera.zoom, 4.6), 0); after(); },
-      share: () => { const t = { title: 'Release Your Firefly', text: `I released a firefly over ${UI.bname(d.b)}. Concept demonstration.` }; if (navigator.share) navigator.share(t).catch(() => {}); else UI.toast('Link copied', 'share'); } }; }
+      share: () => { const t = { title: 'Release the Firefly', text: `I released a firefly over ${UI.bname(d.b)}. Concept demonstration.` }; if (navigator.share) navigator.share(t).catch(() => {}); else UI.toast('Link copied', 'share'); } }; }
 
   /* ================= 4. notifications + inbox ================= */
   const NOTES = [

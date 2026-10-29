@@ -24,6 +24,9 @@ jobs:
           mkdir _site
           cp index.html portal.html .nojekyll _site/
           cp -R process _site/process
+          cp -R submission _site/submission
+          cp -R submission _site/submission
+          cp -R brand _site/brand
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

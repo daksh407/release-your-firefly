@@ -1,5 +1,5 @@
 /* ================= the campaign: a 14-day window and a leaderboard of connections =================
-   The portal is one part of the "Release Your Firefly" campaign: it is open for 14 days, then the board locks on Swarm Night.
+   The portal is one part of the "Release the Firefly" campaign: it is open for 14 days, then the board locks on Swarm Night.
    The board ranks makers by Glows received during the 14 days. Who glowed whom stays private; totals and first names only; anyone can hide.
    Demo: #day=N sets the campaign day (default 6). All counts are sample data. */
 const CAMP = (() => {
@@ -72,7 +72,7 @@ const CAMP = (() => {
 
   /* header card on the map */
   function header() { const mk = document.querySelector('#app .mark'); if (!mk) return;
-    mk.innerHTML = `<button class="campcard" data-press aria-label="Campaign day ${day} of ${DAYS}. Open the leaderboard"><span class="lg">${KIT['logo-mark']}</span><span><b>Release Your Firefly</b><span class="sg">${segs()}</span><small>Demo day ${day} of ${DAYS} · ${left ? left + ' days left' : 'last day'}</small></span></button>`;
+    mk.innerHTML = `<button class="campcard" data-press aria-label="Campaign day ${day} of ${DAYS}. Open the leaderboard"><span class="lg">${KIT['logo-mark']}</span><span><b>Release the Firefly</b><img src="brand/adobe-chitkara.png" alt="Adobe × Chitkara University" style="display:block;width:146px;height:31px;object-fit:contain;background:white;margin:5px 0;border-radius:3px"><span class="sg">${segs()}</span><small>Demo day ${day} of ${DAYS} · ${left ? left + ' days left' : 'last day'}</small></span></button>`;
     mk.querySelector('.campcard').addEventListener('click', () => board()); }
 
   /* the leaderboard */

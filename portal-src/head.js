@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Release Your Firefly</title>
+<title>Release the Firefly</title>
 <meta name="theme-color" content="#0b0d26">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +33,7 @@ body.night .t b em{color:var(--glow)}
 .n{position:fixed;z-index:2;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));font:600 11px var(--body);color:var(--muted);background:rgba(11,13,38,.6);border:1px solid rgba(255,241,214,.16);padding:6px 10px;border-radius:999px;pointer-events:none}
 </style>
 <canvas id="gl" tabindex="0" aria-label="Isometric night model of Chitkara University, Punjab. Drag to turn, pinch or scroll to zoom, two fingers to pan."></canvas>
-<div class="t"><b>Release Your <em>Firefly</em></b><span>Chitkara University, Punjab</span></div>
+<div class="t"><b>Release the <em>Firefly</em></b><span>Chitkara University, Punjab</span></div>
 <div class="n">Drag to turn · two fingers to move · pinch to zoom</div>
 <div class="ctl"><button id="rl" aria-label="Turn left"><svg viewBox="0 0 24 24"><path d="M9 5 4 10l5 5"/><path d="M4 10h9a6 6 0 0 1 0 12h-2"/></svg></button><button id="hm" aria-label="Back to the whole campus"><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg></button><button id="nt" aria-label="Switch day and night"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg></button><button id="rr" aria-label="Turn right"><svg viewBox="0 0 24 24"><path d="m15 5 5 5-5 5"/><path d="M20 10h-9a6 6 0 0 0 0 12h2"/></svg></button></div>
 

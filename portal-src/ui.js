@@ -183,7 +183,7 @@ const UI = (() => {
   app.innerHTML = `
   <div class="vig"></div>
   <div class="anchors"></div>
-  <header class="top"><div class="mark"><span class="lg">${kit('logo-mark')}</span><div><b>Release Your <em>Firefly</em></b><small>designed by Daksh · GPT concept art</small></div></div><div class="tr pe"></div></header>
+  <header class="top"><div class="mark"><span class="lg">${kit('logo-mark')}</span><div><b>Release the <em>Firefly</em></b><small>designed by Daksh · GPT concept art</small></div></div><div class="tr pe"></div></header>
   <div class="clockchip"><span class="chip">${ic('clock')}9:00 PM</span></div>
   <div class="scrim"></div>
   <div class="col">
@@ -249,7 +249,7 @@ const UI = (() => {
   <div class="toasts" role="status" aria-live="polite"></div>
   <div class="confs"></div>
   <div class="ghosts"></div>
-  <div class="intro" hidden><span class="lt">${kit('logo-tile')}</span><h1>Release your firefly.</h1><p>Make something. Find your people.</p><small>Chitkara University, Punjab</small></div>
+  <div class="intro" hidden><span class="lt">${kit('logo-tile')}</span><h1>Release the Firefly.</h1><p>Make something. Find your people.</p><small>Chitkara University, Punjab</small></div>
   <div class="finger"></div>`;
   $('.tr', app).appendChild($('.ctl'));
   const anchors = $('.anchors', app), ghosts = $('.ghosts', app);
