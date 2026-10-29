@@ -318,7 +318,7 @@ const UI = (() => {
       const f = new THREE.Vector3(); camera.getWorldDirection(f); f.y = 0; f.normalize(); const k = lift / (ppu * Math.sin(PITCH)); x -= f.x * k; z -= f.z * k; }
     const t = controls.target; CAM.x.set(t.x).to(x); CAM.z.set(t.z).to(z); if (zoom) CAM.zm.set(camera.zoom).to(zoom); if(RMO){const d=new THREE.Vector3(x-controls.target.x,0,z-controls.target.z);controls.target.add(d);camera.position.add(d);if(zoom){camera.zoom=zoom;camera.updateProjectionMatrix();}camera.lookAt(controls.target);}
     window.__ar = setTimeout(() => { if (!TOUR.on) controls.autoRotate = true; }, 12000); }
-  function camHome() { camGo(HOMET, HOMEZ); }
+  function camHome() { if(typeof THEME !== 'undefined') THEME.home(); else camGo(HOMET, HOMEZ); }
   controls.addEventListener('start', () => [CAM.x, CAM.z, CAM.zm].forEach(s => MOTION.delete(s)));
   function camStep() { if (CAM.x.busy || CAM.z.busy) { const d = new THREE.Vector3(CAM.x.x - controls.target.x, 0, CAM.z.x - controls.target.z); controls.target.add(d); camera.position.add(d); }
     if (CAM.zm.busy) { camera.zoom = CAM.zm.x; camera.updateProjectionMatrix(); } }
@@ -499,9 +499,10 @@ const UI = (() => {
   /* ---------- map taps: firefly → card, building → tag, release step 2 → spot ---------- */
   const rc = new THREE.Raycaster(), nd = new THREE.Vector2(); const BMESH = []; BGRP.forEach((g, i) => g && g.traverse(o => { if (o.isMesh) { o.userData.bld = i; BMESH.push(o); } }));
   function buildingAt(x, y) { const r = canvas.getBoundingClientRect(); nd.set((x + STAGE.x - r.left) / r.width * 2 - 1, -((y + STAGE.y - r.top) / r.height) * 2 + 1); rc.setFromCamera(nd, camera); const h = rc.intersectObjects(BAKE.PROXY, false)[0]; return h ? h.object.userData.bld : null; }
-  let down = null;
-  canvas.addEventListener('pointerdown', e => { down = { x: sx(e), y: sy(e), t: performance.now() }; });
-  canvas.addEventListener('pointerup', e => { if (!down) return; const x = sx(e), y = sy(e); const tap = Math.hypot(x - down.x, y - down.y) < 7 && performance.now() - down.t < 400; down = null; if (tap) mapTap(x, y); });
+  let down = null; const mapPointers=new Set(); let multiTouch=false;
+  canvas.addEventListener('pointerdown', e => { mapPointers.add(e.pointerId); if(mapPointers.size>1)multiTouch=true; down = { x: sx(e), y: sy(e), t: performance.now() }; });
+  canvas.addEventListener('pointerup', e => { mapPointers.delete(e.pointerId); const blocked=multiTouch; if(!mapPointers.size)multiTouch=false; if (!down) return; const x = sx(e), y = sy(e); const tap = !blocked && Math.hypot(x - down.x, y - down.y) < 10 && performance.now() - down.t < 450; down = null; if (tap) mapTap(x, y); });
+  canvas.addEventListener('pointercancel',e=>{mapPointers.delete(e.pointerId);down=null;if(!mapPointers.size)multiTouch=false;});
   function mapTap(x, y) {
     if (relS.isOpen && step === 1) { const b = buildingAt(x, y); if (b !== null) setSpot(b); return; }
     if (cardS.isOpen) return;

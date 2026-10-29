@@ -66,3 +66,11 @@ Automated checks covered identical seeded demo data, 3–5 distinct schools per 
 `portal-source.zip` contains the source modules and `build.sh`. Run `bash build.sh` inside the extracted folder to regenerate `portal.html`. The SVG kit is already inlined in `kit.js`; the original external kit folder is not needed. The new interaction and recording polish lives primarily in `ui.js`, `polish.js`, `motion.js`, `flies.js`, and `tour.js`.
 
 After editing the source files, run `bash build.sh` then `cp portal.html index.html`.
+
+## Phone and playback update — 29 October
+
+The published entry page now uses four shared, compressed artwork files and a separate cached script. Its existing Three.js r160 library is hosted alongside the site. The complete portal.html remains available as the source export. The Pages workflow publishes assets/ and vendor/ with the page.
+
+On phones, drag to move and pinch to zoom. Explore campus opens a searchable building list, a whole-campus reset and a sample firefly shortcut. Turning has explicit buttons; the touch view keeps a steady tilt. A loading screen offers recovery instructions for camera scanner browsers. The QR address is unchanged and has been decoded from the final streamed film to verify it.
+
+The film player uses 720p fast-start versions, with HD downloads available separately. The short cut waits until play before downloading. Both mixes use quiet tactile cues and curved fades; the old heartbeat, pop, sparkle, riser and impact layers have been removed.

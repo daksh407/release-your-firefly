@@ -12,8 +12,9 @@ function loop() { const realDt = clock.getDelta(), dt = Math.min(realDt,.05); co
 loop();
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); frameCamera(); UI.layout(); });
 window.__app = { scene, camera, controls, THREE, UI, FF, TOUR, DEMO, get fps() { return FPS; }, get stage(){return STAGE;}, get reducedMotion(){return RMO;}, focus(k, z = 4) { const p = FOCUS[k]; controls.target.copy(p).setY(0); camera.zoom = z; camera.updateProjectionMatrix(); } }; window.__ready = true;
+window.dispatchEvent(new Event('ryf:ready'));
 POLISH.init();
-if (QS.has('promo')) TOUR.startPromo(); else if (QS.has('tour')) TOUR.start(0); else if (!QS.has('nointro') && !QS.has('work')) UI.showIntro(2600).then(() => STORY.firstRun());
+if (QS.has('promo')) TOUR.startPromo(); else if (QS.has('tour')) TOUR.start(0); else if (!QS.has('nointro') && !QS.has('work') && !THEME.touchMap) UI.showIntro(1800).then(() => STORY.firstRun());
 </script>
 
 </body></html>

@@ -43,7 +43,7 @@ document.getElementById('hm').onclick = () => { zoomTo = HOMEZ; targetTo = HOMET
 let nightTo = 1; document.body.classList.add('night'); document.getElementById('nt').onclick = () => { nightTo = nightTo ? 0 : 1; document.body.classList.toggle('night', !!nightTo); };
 addEventListener('keydown', e => { if(e.target.closest('textarea,input,select'))return; if (e.key === 'q' || e.key === 'Q') turn(-1); if (e.key === 'e' || e.key === 'E') turn(1); if (e.key === 'n' || e.key === 'N') document.getElementById('nt').click(); });
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let lastTap = 0;
-canvas.addEventListener('pointerup', e => { const now = performance.now(); if (now - lastTap < 320) {
+canvas.addEventListener('pointerup', e => { if(e.pointerType==='touch')return; const now = performance.now(); if (now - lastTap < 320) {
   ndc.set((e.clientX - STAGE.x) / innerWidth * 2 - 1, -((e.clientY - STAGE.y) / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
   const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -2); const hit = new THREE.Vector3(); if (ray.ray.intersectPlane(plane, hit)) { targetTo = hit.setY(0); zoomTo = Math.min(controls.maxZoom, camera.zoom * 2); } }
   lastTap = now; });
@@ -66,8 +66,9 @@ scene.traverse(o => { const m = o.material; if (o.isPoints || o.isSprite || (m &
 const isPhone = Math.min(innerWidth, innerHeight) < 700;
 if (isPhone && !REC) renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 function makeTargets() { const pr = renderer.getPixelRatio(), w = Math.floor(innerWidth * pr), h = Math.floor(innerHeight * pr);
-  const col = new THREE.WebGLRenderTarget(w, h, { samples: 4, type: THREE.HalfFloatType });
-  const nrm = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType }); nrm.depthTexture = new THREE.DepthTexture(w, h); nrm.depthTexture.type = THREE.UnsignedIntType;
+  const type = isPhone || !renderer.capabilities.isWebGL2 ? THREE.UnsignedByteType : THREE.HalfFloatType;
+  const col = new THREE.WebGLRenderTarget(w, h, { samples: isPhone ? 0 : 4, type });
+  const nrm = new THREE.WebGLRenderTarget(w, h, { type }); nrm.depthTexture = new THREE.DepthTexture(w, h); nrm.depthTexture.type = THREE.UnsignedIntType;
   return { col, nrm, w, h }; }
 let RT = makeTargets();
 const normalMat = new THREE.MeshNormalMaterial();

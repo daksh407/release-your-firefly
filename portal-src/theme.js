@@ -24,6 +24,13 @@ const THEME = (() => {
   controls.screenSpacePanning = false; controls.zoomToCursor = true; controls.panSpeed = 1; controls.rotateSpeed = .55; controls.zoomSpeed = 1.1; controls.dampingFactor = .09;
   const TILT_MIN = 18 * Math.PI / 180, TILT_MAX = 58 * Math.PI / 180;
   controls.minPolarAngle = Math.PI / 2 - TILT_MAX; controls.maxPolarAngle = Math.PI / 2 - TILT_MIN; controls.minZoom = .8; controls.maxZoom = 14;
+  const touchMap = matchMedia('(pointer:coarse)').matches || innerWidth < 700;
+  if (touchMap) {
+    // Keep a predictable viewing angle. Turning has its own explicit buttons.
+    controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
+    controls.minPolarAngle = controls.maxPolarAngle = Math.PI / 2 - 32 * Math.PI / 180;
+    controls.panSpeed = .65; controls.zoomSpeed = .8; controls.maxZoom = 10;
+  }
   // keep the post.js idle spin from coming back
   const _ar = setInterval(() => { if (!TOUR.on) controls.autoRotate = false; }, 500);
 
@@ -60,11 +67,25 @@ const THEME = (() => {
   /* open at the main gate: standing just inside it, looking down the avenue across the Alpha Zone to the whole campus */
   const HOME = (() => { const tgt = P(488, 150), gate = P(...GATE_C); const th = Math.atan2(gate.x - tgt.x, gate.z - tgt.z);
     const s0 = state(); return { x: tgt.x, z: tgt.z, zoom: HOMEZ * (innerWidth < innerHeight ? 1.15 : 1.25), th, ph: Math.PI / 2 - 32 * Math.PI / 180, r: s0.r }; })();
+  function fitPhoneOverview() {
+    if (!touchMap || REC) return;
+    const bounds = new THREE.Box3(); BGRP.forEach(g => { if(g) bounds.expandByObject(g); });
+    const c = bounds.getCenter(new THREE.Vector3()); HOME.x=c.x; HOME.z=c.z;
+    controls.target.set(c.x,0,c.z); sph.set(HOME.r,HOME.ph,HOME.th); camera.position.copy(controls.target).add(off.setFromSpherical(sph));
+    camera.zoom=1; camera.updateProjectionMatrix(); camera.lookAt(controls.target); camera.updateMatrixWorld();
+    let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+    for(const x of [bounds.min.x,bounds.max.x]) for(const y of [0,bounds.max.y]) for(const z of [bounds.min.z,bounds.max.z]) {
+      const p=new THREE.Vector3(x,y,z).project(camera); x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);
+    }
+    HOME.zoom=THREE.MathUtils.clamp(Math.min(2*(innerWidth-30)/innerWidth/(x1-x0),2*Math.max(240,innerHeight-310)/innerHeight/(y1-y0)),.8,3);
+  }
+  fitPhoneOverview();
   if (!QS.has('tour')) { controls.target.set(HOME.x, 0, HOME.z); sph.set(HOME.r, HOME.ph, HOME.th); off.setFromSpherical(sph); camera.position.copy(controls.target).add(off); camera.zoom = HOME.zoom; camera.updateProjectionMatrix(); camera.lookAt(controls.target); }
   $('.zi', mc).addEventListener('click', () => flyTo({ zoom: Math.min(controls.maxZoom, camera.zoom * 1.6) }, .45));
   $('.zo', mc).addEventListener('click', () => flyTo({ zoom: Math.max(controls.minZoom, camera.zoom / 1.6) }, .45));
   cmpB.addEventListener('click', () => flyTo({ th: HOME.th, ph: HOME.ph }, .8));
-  $('.hm', mc).addEventListener('click', () => { closeUp = null; back.classList.remove('show'); UI.hideTag(); flyTo({ x: HOME.x, z: HOME.z, zoom: HOME.zoom, th: HOME.th, ph: HOME.ph }, 1.2); });
+  function home(){ closeUp = null; back.classList.remove('show'); UI.hideTag(); flyTo({ x: HOME.x, z: HOME.z, zoom: HOME.zoom, th: HOME.th, ph: HOME.ph }, .75); }
+  $('.hm', mc).addEventListener('click', home);
 
   /* ---------- tap a building: fly in close, turn to face its entrance, lower the camera to see the facade ---------- */
   const SIDE_TH = { S: 0, E: Math.PI / 2, N: Math.PI, W: -Math.PI / 2 };
@@ -77,7 +98,7 @@ const THEME = (() => {
     const th = (B[6] in HF ? rq + HF[B[6]] : SIDE_TH[BLD_SIDE[b] || 'S']) + .5;                       // three-quarter view of the entrance side
     if (closeUp === null) before = state(); closeUp = b;
     // keep the building a little above centre so the tag and sheets never cover it
-    const fwd = new THREE.Vector3(Math.sin(th), 0, Math.cos(th)), tilt = 30 * Math.PI / 180;
+    const fwd = new THREE.Vector3(Math.sin(th), 0, Math.cos(th)), tilt = (touchMap ? 32 : 30) * Math.PI / 180;
     const lift = (camera.top - camera.bottom) / zoom * .13 / Math.sin(tilt);                           // building sits in the upper half, tag and sheets below it
     flyTo({ x: c.x + fwd.x * lift, z: c.z + fwd.z * lift, zoom, th, ph: Math.PI / 2 - tilt }, 1.25);
     back.classList.add('show'); }
@@ -89,5 +110,5 @@ const THEME = (() => {
   document.addEventListener('ryf:navigate',()=>{back.classList.remove('show');});
   window.__dbg = { BLD, BAKE, camera, canvas, closeUpOn };
   setInterval(() => { app.classList.toggle('sheeton', [UI.cardS, UI.relS, UI.meetS, UI.meS].some(x => x && x.isOpen)); }, 120);
-  return { step, flyTo, closeUpOn, get closeUp() { return closeUp; } };
+  return { step, flyTo, closeUpOn, home, touchMap, get heading(){return state().th;}, get closeUp() { return closeUp; } };
 })();

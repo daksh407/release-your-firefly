@@ -1,0 +1,33 @@
+{
+  "name": "Release the Firefly",
+  "pdf": "Release-the-Firefly-Submission.pdf",
+  "pages": 6,
+  "sha256": "0fe40c2229ca1718167242cf57431a77f99e607079ae66c1b30b2617124962cd",
+  "links": [
+    "https://daksh407.github.io/",
+    "https://daksh407.github.io/release-your-firefly/",
+    "https://daksh407.github.io/release-your-firefly/process/",
+    "https://daksh407.github.io/release-your-firefly/submission/campaign-artwork.zip",
+    "https://daksh407.github.io/release-your-firefly/submission/promo.html#full-film",
+    "https://daksh407.github.io/release-your-firefly/submission/promo.html#short-film"
+  ],
+  "status": "Campaign proposal; required Firefly production assets outstanding",
+  "videos": {
+    "full": "Firefly-full.mp4",
+    "full_seconds": 51.3,
+    "short": "Firefly-15s.mp4",
+    "short_seconds": 15,
+    "page_order": [
+      "full",
+      "short"
+    ],
+    "full_stream": "Firefly-full-stream.mp4",
+    "short_stream": "Firefly-15s-stream.mp4",
+    "audio": "Voice-led mix; ten quiet tactile cues; curved fades on every cue and on the music bed",
+    "full_stream_bytes": 4271520,
+    "full_stream_sha256": "37bbf0fcd32bbfb2719fd409040b668c3d90a6d4e9608cc634218407d3041025",
+    "short_stream_bytes": 981880,
+    "short_stream_sha256": "6af27b743de6541d6d85427417a8b83dce267e7a0871813875ea5041e8d0ac1e"
+  },
+  "revision": "Workshops, open talks, brainstorming and personal design feedback; conversational first-person copy"
+}
