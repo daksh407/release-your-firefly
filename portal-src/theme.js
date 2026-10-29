@@ -43,7 +43,7 @@ const THEME = (() => {
   $('.col', app).appendChild(mc);
   const back = document.createElement('div'); back.className = 'backchip';
   back.innerHTML = `<button class="btn" data-press><i class="ic">${KIT['icon-back'].replace(/#14102E/g, 'currentColor')}</i>Campus</button>`; app.appendChild(back);
-  const cmpI = $('.cmp .ic', mc), cmpB = $('.cmp', mc), tagBody = $('.tag .card0', app), tagThread = $('.tag .thread', app);
+  const cmpI = $('.cmp .ic', mc), cmpB = $('.cmp', mc), tagBody = $('.tag .card0', app);
 
   /* ---------- one smooth camera flight: target, zoom, heading and tilt together ---------- */
   const sph = new THREE.Spherical(); const off = new THREE.Vector3();
@@ -60,9 +60,10 @@ const THEME = (() => {
     if (F.on) { F.t = Math.min(1, F.t + dt / F.dur); const k = ease2(F.t), A = F.a, B = F.b, L = (p) => A[p] + (B[p] - A[p]) * k;
       controls.target.set(L('x'), 0, L('z')); sph.set(A.r, L('ph'), L('th')); off.setFromSpherical(sph); camera.position.copy(controls.target).add(off);
       camera.zoom = A.zoom * Math.pow(B.zoom / A.zoom, k); camera.updateProjectionMatrix(); camera.lookAt(controls.target); if (F.t >= 1) F.on = false; }
+    camera.updateMatrixWorld();
     if (closeUp !== null && closeUp !== undefined) { const pr = BAKE.PROXY.find(x => x.userData.bld === closeUp); if (pr) { const bb = pr.geometry.parameters, c = pr.position;
-        const top = toScreen([c.x, c.y + bb.height / 2, c.z]).y, base = toScreen([c.x, c.y - bb.height / 2, c.z]).y; tagBody.style.marginTop = Math.max(36, base - top + 46) + 'px'; tagThread.style.opacity = 1; } }
-    else { tagBody.style.marginTop = ''; tagThread.style.opacity = ''; }
+        const top = toScreen([c.x, c.y + bb.height / 2, c.z]).y, base = toScreen([c.x, c.y - bb.height / 2, c.z]).y; tagBody.style.marginTop = Math.max(36, base - top + 46) + 'px'; } }
+    else { tagBody.style.marginTop = ''; }
     const s = state(); cmpI.style.transform = `rotate(${(-s.th + 3 * Math.PI / 4)}rad)`;
     const away = Math.abs(Math.atan2(Math.sin(s.th - HOME.th), Math.cos(s.th - HOME.th))) > .12 || Math.abs(s.ph - HOME.ph) > .08; cmpB.classList.toggle('show', away);
   }

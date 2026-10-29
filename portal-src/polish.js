@@ -45,7 +45,7 @@ const POLISH = (() => {
  .sheeton .mapctl{visibility:hidden}.backchip{position:absolute;top:75px;left:50%;transform:translateX(-50%);display:none}.backchip.show{display:block;pointer-events:auto}
  .backchip .btn{padding:0 12px;height:40px;font-size:12px!important}
  .tag .sub{display:block;font-size:11px;margin:-4px 0 12px}.tag .n{display:inline!important;position:static;color:var(--ink);padding:0;background:none;border:0;font-size:12px}
- .tag .thread{height:40px}.tag .card0{padding:23px 14px 14px}.tag h3{font-size:15px}
+ .tag .card0{padding:23px 14px 14px}.tag h3{font-size:15px}
  .record-tools{position:absolute;right:16px;top:16px;pointer-events:auto}.record-tools>button{width:36px;height:36px;font-size:16px}
  .desk{position:absolute;right:0;top:48px;width:275px;padding:16px;max-height:calc(var(--ah) - 90px);overflow:auto}.desk[hidden]{display:none}.desk h3{margin:0 0 10px;font-size:16px}.desk p{font-size:11px;line-height:1.5;margin:10px 0}.desk .row{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}.desk .btn{font-size:11px!important;min-height:36px;padding:6px 12px}
  .demo-tag{position:absolute;top:68px;left:18px;color:#FFF4DE99;font-size:9px;letter-spacing:.08em}

@@ -81,7 +81,8 @@ const UI = (() => {
   /* tag + markers */
   .anch{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;will-change:transform}
   .tag{position:absolute;left:-118px;top:0;width:236px;transform-origin:118px 0;pointer-events:auto}
-  .tag .thread{position:absolute;left:105px;top:-2px;width:30px;height:40px}
+  .tag-thread{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:2}
+  .tag-thread[hidden]{display:none}
   .tag .card0{position:relative;margin-top:36px;padding:22px 16px 16px}
   .tag .hole{position:absolute;left:50%;top:9px;width:13px;height:13px;margin-left:-6px;border-radius:50%;background:var(--night);border:3px solid var(--ink)}
   .tag h3{margin:0 0 12px;font:800 17px/1.1 var(--ui);letter-spacing:-.005em}
@@ -327,8 +328,9 @@ const UI = (() => {
 
   /* ---------- building tag on its red thread (a pendulum spring: it sways as the map moves) ---------- */
   const tagA = document.createElement('div'); tagA.className = 'anch'; anchors.appendChild(tagA);
-  tagA.innerHTML = `<div class="tag" hidden><svg class="thread" viewBox="0 0 30 40" fill="none"><path d="M15 38C0 21 30 22 19 3" stroke="#E2384A" stroke-width="4" stroke-linecap="round"/></svg><div class="card0 panel"><span class="hole"></span><h3></h3><div class="row"><span class="chip">${ic('glow')}<span class="n"></span></span><button class="btn pill amber go" data-press aria-label="Open" style="height:40px;flex:1">${ic('next')}</button></div></div></div>`;
+  tagA.innerHTML = `<div class="tag" hidden><div class="card0 panel"><span class="hole"></span><h3></h3><div class="row"><span class="chip">${ic('glow')}<span class="n"></span></span><button class="btn pill amber go" data-press aria-label="Open" style="height:40px;flex:1">${ic('next')}</button></div></div></div><svg class="tag-thread" viewBox="0 0 1 1" fill="none" aria-hidden="true" hidden><path stroke="#E2384A" stroke-width="3" stroke-linecap="round"/><circle r="2.2" fill="#E2384A"/></svg>`;
   const tagEl = $('.tag', tagA); let tagB = null, lastAx = null;
+  const tagString=$('.tag-thread',tagA),tagPath=$('path',tagString),tagKnot=$('circle',tagString),tagHole=$('.hole',tagEl);
   const tagDrop = spring(0, 'base', v => { tagEl.style.opacity = Math.min(1, v * 1.6); }, .002);
   const tagSw = spring(0, [.45, 1], null, .01);
   const fliesAt = b => FF.list.filter(f => f.d.b === b && f.mode !== 'flight');
@@ -521,13 +523,24 @@ const UI = (() => {
   function place(a, p, dy = 0) { toScreen(p, so); a.style.transform = `translate3d(${so.x.toFixed(1)}px,${(so.y + dy).toFixed(1)}px,0)`; return so; }
   function frame(t, dt) {
     camStep(); holdFrame(dt); confFrame(dt);
+  }
+  // Project anchors after every camera controller has finished its work for this frame.
+  function frameAnchors(t,dt){
+    tagString.toggleAttribute('hidden',tagEl.hidden);
     if (tagB !== null || !tagEl.hidden) { const b = tagB ?? lastB; if (b !== null && b !== undefined) { const p = FF.bTop(b); place(tagA, p, -6);
         if (lastAx !== null && !RMO) { const vx = (so.x - lastAx) / Math.max(dt, 1e-3); tagSw.t = clamp(-vx * .035, -14, 14); MOTION.add(tagSw); } lastAx = so.x; lastB = b;
-        tagEl.style.transform = `translateY(${(1 - tagDrop.x) * -30}px) rotate(${tagSw.x.toFixed(2)}deg)`; } }
+        tagEl.style.transform = `translateY(${(1 - tagDrop.x) * -30}px) rotate(${tagSw.x.toFixed(2)}deg)`;
+        // Read the transformed hole, so the string stays connected through sway and drop.
+        const anchor=tagA.getBoundingClientRect(),hole=tagHole.getBoundingClientRect();
+        const x=hole.left+hole.width/2-anchor.left,y=hole.top+hole.height/2-anchor.top;
+        tagPath.setAttribute('d',`M0 0 Q${(x*.5+2).toFixed(2)} ${(y*.5).toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)}`);
+        tagKnot.setAttribute('cx',x.toFixed(2));tagKnot.setAttribute('cy',y.toFixed(2));
+        tagString.style.opacity=tagEl.style.opacity;
+      } }
     [mSpot, mMeet, mYou].forEach(m => { if (m.p) place(m.a, m.p); });
   }
   let lastB = null;
   setTab('sky');
-  return { confetti, setTab, hideNav: a => navAway && navAway(a), get tab() { return tab; }, mYou, mSpot, mMeet, bname, go, openCard, closeCard, openRelease, setStep, setSpot, selSw, pickArt, holdStart, holdEnd, glow, openMeet, openMe, swarmNight, showIntro, toast, camGo, camHome, cancelCamera, showTag, hideTag, frame, layout, sheets,
+  return { confetti, setTab, hideNav: a => navAway && navAway(a), get tab() { return tab; }, mYou, mSpot, mMeet, bname, go, openCard, closeCard, openRelease, setStep, setSpot, selSw, pickArt, holdStart, holdEnd, glow, openMeet, openMe, swarmNight, showIntro, toast, camGo, camHome, cancelCamera, showTag, hideTag, frame, frameAnchors, layout, sheets,
     get cur() { return cur; }, get step() { return step; }, get R() { return R; }, rel, card, meet, me, nav, app, relS, cardS, meetS, meS, $, imin: () => $('.imin', meet).click(), isIn: () => imIn, isNight: () => snOn };
 })();
