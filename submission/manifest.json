@@ -1,8 +1,8 @@
 {
   "name": "Release the Firefly",
   "pdf": "Release-the-Firefly-Submission.pdf",
-  "pages": 6,
-  "sha256": "0fe40c2229ca1718167242cf57431a77f99e607079ae66c1b30b2617124962cd",
+  "pages": 7,
+  "sha256": "6ad02cea337066d1f4432f9e6ea7979046ca4259148fb424e4a97c4e326e9f3e",
   "links": [
     "https://daksh407.github.io/",
     "https://daksh407.github.io/release-your-firefly/",
@@ -29,5 +29,6 @@
     "short_stream_bytes": 986769,
     "short_stream_sha256": "d50d9e1a1266704e48d06ff928835a3a3bde6c63ec9c573a8988be0c90a53887"
   },
-  "revision": "Workshops, open talks, brainstorming and personal design feedback; conversational first-person copy"
+  "revision": "Human wording review; complete design notes; process board included once as the final landscape page",
+  "bytes": 5650721
 }
