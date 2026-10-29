@@ -1,9 +1,9 @@
-# Visual process board
+# Release Your Firefly — brainstorming wall
 
-Open index.html through a local server or at the published /process/ URL. Use arrow keys or click any chapter to focus. 0 returns to the overview, F hides controls, Escape resets the view. Drag or pinch/scroll to explore. Photos + prompts contains the full campus-photo gallery and prompt evidence.
+A scattered pin-and-thread process board using actual campus photos, map references, prompt excerpts, UI studies and existing motion frames.
 
-The PDF is one large, zoomable sheet with vector typography, without page numbers or footers. process-board.png is the large import image. The sections/ folder contains eight separate, high-resolution cards for importing into Adobe Firefly Boards. This export is not itself an Adobe Firefly Board.
+Drag to pan; scroll or pinch to zoom. Arrow keys move between loose clusters. 0 fits the wall. F hides the controls. Photos + prompts opens the source gallery.
 
-Evidence: the two Adobe NEXT Claude chats, original supplied campus photographs, earlier map references, original SVG kit and story pack, and the existing app and film captures. Photo IDs preserve traceability. Two unidentified campus views remain explicitly unconfirmed.
+The PDF is a single large sheet without footers or page numbers. The PNG and eight cluster images can be imported into Adobe Firefly Boards. This export does not create an Adobe Firefly Board link.
 
-The public prototype uses local browser storage. It does not arrange real meetings or share uploads. GPT concept illustrations are labelled separately from real photography and Firefly work.
+Photos and prompts come from the two Adobe NEXT Claude conversations and the supplied project files. The four generated illustrations are labelled GPT concepts. The prototype and meet-ups are demonstrations.
