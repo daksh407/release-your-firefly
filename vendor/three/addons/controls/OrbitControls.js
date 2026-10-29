@@ -478,6 +478,14 @@ class OrbitControls extends EventDispatcher {
 		const pointers = [];
 		const pointerPositions = {};
 
+		// Local interaction fix: discard residual input before scripted camera flights.
+		this.stop = function () {
+			sphericalDelta.set( 0, 0, 0 );
+			panOffset.set( 0, 0, 0 );
+			scale = 1;
+			performCursorZoom = false;
+		};
+
 		function getAutoRotationAngle( deltaTime ) {
 
 			if ( deltaTime !== null ) {
@@ -873,7 +881,7 @@ class OrbitControls extends EventDispatcher {
 
 			const distance = Math.sqrt( dx * dx + dy * dy );
 
-			dollyStart.set( 0, distance );
+			dollyStart.set( 0, Math.max( 12, distance ) );
 
 		}
 
@@ -956,7 +964,7 @@ class OrbitControls extends EventDispatcher {
 
 			const distance = Math.sqrt( dx * dx + dy * dy );
 
-			dollyEnd.set( 0, distance );
+			dollyEnd.set( 0, Math.max( 12, distance ) );
 
 			dollyDelta.set( 0, Math.pow( dollyEnd.y / dollyStart.y, scope.zoomSpeed ) );
 
@@ -1039,6 +1047,13 @@ class OrbitControls extends EventDispatcher {
 		function onPointerUp( event ) {
 
 			removePointer( event );
+
+			// Continue from the remaining fingers instead of freezing after a pinch.
+			if ( event.pointerType === 'touch' && pointers.length > 0 ) {
+				const id = pointers[ 0 ], position = pointerPositions[ id ];
+				onTouchStart( { pointerId: id, pageX: position.x, pageY: position.y } );
+				return;
+			}
 
 			if ( pointers.length === 0 ) {
 

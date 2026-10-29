@@ -1,6 +1,6 @@
 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OrbitControls } from '../vendor/three/addons/controls/OrbitControls.js?v=gestures-4';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 /* ---------- record stage: #rec=916 or #rec=169 locks the whole app to a 9:16 / 16:9 box (also ?rec=) ---------- */
@@ -844,10 +844,16 @@ function updateCam(dt) {
   const before = controls.target.clone();
   if (targetTo) { controls.target.lerp(targetTo, k); if (controls.target.distanceTo(targetTo) < .5) targetTo = null; }
   if (zoomTo) { camera.zoom += (zoomTo - camera.zoom) * k; camera.updateProjectionMatrix(); if (Math.abs(zoomTo - camera.zoom) < .01) zoomTo = null; }
-  controls.target.x = THREE.MathUtils.clamp(controls.target.x, BOUND.x0, BOUND.x1); controls.target.z = THREE.MathUtils.clamp(controls.target.z, BOUND.z0, BOUND.z1); controls.target.y = 0;
   camera.position.add(controls.target.clone().sub(before));
   NIGHT.value += (nightTo - NIGHT.value) * k; NIGHT_HOOKS.forEach(f => f(NIGHT.value));
   if (window.__fm) window.__fm.uniforms.uNightA.value = NIGHT.value;
+}
+function constrainCamera(){
+  const before=controls.target.clone();
+  controls.target.x=THREE.MathUtils.clamp(controls.target.x,BOUND.x0,BOUND.x1);
+  controls.target.z=THREE.MathUtils.clamp(controls.target.z,BOUND.z0,BOUND.z1);controls.target.y=0;
+  const delta=controls.target.clone().sub(before);camera.position.add(delta);
+  if(delta.lengthSq()>1e-8)controls.stop?.();
 }
 
 /* ================= marker outlines: edge detection on depth + normals, thick silhouettes, thinner creases, slight wobble ================= */
@@ -1764,13 +1770,15 @@ const UI = (() => {
   /* ---------- camera moves on a critically damped spring ---------- */
   const CAM = { x: spring(0, 'cam', null, .05), z: spring(0, 'cam', null, .05), zm: spring(1, 'cam', null, .0005) };
   function camGo(p, zoom, lift = 0) { targetTo = null; zoomTo = null; controls.autoRotate = false; clearTimeout(window.__ar);
+    if(typeof THEME !== 'undefined') THEME.cancelFlight();
     // lift: keep the point this many px above centre, so an open sheet never covers it
     let x = p[0] ?? p.x, z = p[2] ?? p.z; if (lift && !land) { const zz = zoom || camera.zoom, ppu = zz * innerHeight / (camera.top - camera.bottom);
       const f = new THREE.Vector3(); camera.getWorldDirection(f); f.y = 0; f.normalize(); const k = lift / (ppu * Math.sin(PITCH)); x -= f.x * k; z -= f.z * k; }
     const t = controls.target; CAM.x.set(t.x).to(x); CAM.z.set(t.z).to(z); if (zoom) CAM.zm.set(camera.zoom).to(zoom); if(RMO){const d=new THREE.Vector3(x-controls.target.x,0,z-controls.target.z);controls.target.add(d);camera.position.add(d);if(zoom){camera.zoom=zoom;camera.updateProjectionMatrix();}camera.lookAt(controls.target);}
     window.__ar = setTimeout(() => { if (!TOUR.on) controls.autoRotate = true; }, 12000); }
   function camHome() { if(typeof THEME !== 'undefined') THEME.home(); else camGo(HOMET, HOMEZ); }
-  controls.addEventListener('start', () => [CAM.x, CAM.z, CAM.zm].forEach(s => MOTION.delete(s)));
+  function cancelCamera(){[CAM.x,CAM.z,CAM.zm].forEach(s=>s.set(s.x));}
+  controls.addEventListener('start', cancelCamera);
   function camStep() { if (CAM.x.busy || CAM.z.busy) { const d = new THREE.Vector3(CAM.x.x - controls.target.x, 0, CAM.z.x - controls.target.z); controls.target.add(d); camera.position.add(d); }
     if (CAM.zm.busy) { camera.zoom = CAM.zm.x; camera.updateProjectionMatrix(); } }
 
@@ -1951,14 +1959,15 @@ const UI = (() => {
   const rc = new THREE.Raycaster(), nd = new THREE.Vector2(); const BMESH = []; BGRP.forEach((g, i) => g && g.traverse(o => { if (o.isMesh) { o.userData.bld = i; BMESH.push(o); } }));
   function buildingAt(x, y) { const r = canvas.getBoundingClientRect(); nd.set((x + STAGE.x - r.left) / r.width * 2 - 1, -((y + STAGE.y - r.top) / r.height) * 2 + 1); rc.setFromCamera(nd, camera); const h = rc.intersectObjects(BAKE.PROXY, false)[0]; return h ? h.object.userData.bld : null; }
   let down = null; const mapPointers=new Set(); let multiTouch=false;
-  canvas.addEventListener('pointerdown', e => { mapPointers.add(e.pointerId); if(mapPointers.size>1)multiTouch=true; down = { x: sx(e), y: sy(e), t: performance.now() }; });
-  canvas.addEventListener('pointerup', e => { mapPointers.delete(e.pointerId); const blocked=multiTouch; if(!mapPointers.size)multiTouch=false; if (!down) return; const x = sx(e), y = sy(e); const tap = !blocked && Math.hypot(x - down.x, y - down.y) < 10 && performance.now() - down.t < 450; down = null; if (tap) mapTap(x, y); });
+  canvas.addEventListener('pointerdown', e => { mapPointers.add(e.pointerId); if(mapPointers.size>1)multiTouch=true; down = { id:e.pointerId,x: sx(e), y: sy(e), t: performance.now(),moved:false }; });
+  canvas.addEventListener('pointermove',e=>{if(down&&Math.hypot(sx(e)-down.x,sy(e)-down.y)>8)down.moved=true;});
+  canvas.addEventListener('pointerup', e => { mapPointers.delete(e.pointerId); const blocked=multiTouch; if(!mapPointers.size)multiTouch=false; if (!down) return; const x = sx(e), y = sy(e); const tap = e.pointerId===down.id && !blocked && !down.moved && performance.now() - down.t < 450; down = null; if (tap) mapTap(x, y); });
   canvas.addEventListener('pointercancel',e=>{mapPointers.delete(e.pointerId);down=null;if(!mapPointers.size)multiTouch=false;});
   function mapTap(x, y) {
     if (relS.isOpen && step === 1) { const b = buildingAt(x, y); if (b !== null) setSpot(b); return; }
     if (cardS.isOpen) return;
     const f = FF.pick(x, y); if (f) { openCard(f); return; }
-    const b = buildingAt(x, y); if (b !== null) showTag(b); else hideTag(); }
+    const b = buildingAt(x, y); if (b !== null) UI.showTag(b); else hideTag(); }
   scrim.addEventListener('click', () => { if (cardS.isOpen) closeCard(); else if (relS.isOpen && step !== 1) relS.close(); });
   addEventListener('keydown', e => { if (e.target.closest && e.target.closest('textarea,input')) return;
     if (e.key === 'Escape') { closeCard(); relS.close(); meetS.close(); meS.close(); hideTag(); }
@@ -1976,7 +1985,7 @@ const UI = (() => {
   }
   let lastB = null;
   setTab('sky');
-  return { confetti, setTab, hideNav: a => navAway && navAway(a), get tab() { return tab; }, mYou, mSpot, mMeet, bname, go, openCard, closeCard, openRelease, setStep, setSpot, selSw, pickArt, holdStart, holdEnd, glow, openMeet, openMe, swarmNight, showIntro, toast, camGo, camHome, showTag, hideTag, frame, layout, sheets,
+  return { confetti, setTab, hideNav: a => navAway && navAway(a), get tab() { return tab; }, mYou, mSpot, mMeet, bname, go, openCard, closeCard, openRelease, setStep, setSpot, selSw, pickArt, holdStart, holdEnd, glow, openMeet, openMe, swarmNight, showIntro, toast, camGo, camHome, cancelCamera, showTag, hideTag, frame, layout, sheets,
     get cur() { return cur; }, get step() { return step; }, get R() { return R; }, rel, card, meet, me, nav, app, relS, cardS, meetS, meS, $, imin: () => $('.imin', meet).click(), isIn: () => imIn, isNight: () => snOn };
 })();
 
@@ -2087,7 +2096,8 @@ const THEME = (() => {
     // Keep a predictable viewing angle. Turning has its own explicit buttons.
     controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.minPolarAngle = controls.maxPolarAngle = Math.PI / 2 - 32 * Math.PI / 180;
-    controls.panSpeed = .65; controls.zoomSpeed = .8; controls.maxZoom = 10;
+    controls.panSpeed = .85; controls.zoomSpeed = 1; controls.maxZoom = 10;
+    controls.zoomToCursor = false; controls.dampingFactor = .18;
   }
   // keep the post.js idle spin from coming back
   const _ar = setInterval(() => { if (!TOUR.on) controls.autoRotate = false; }, 500);
@@ -2108,10 +2118,11 @@ const THEME = (() => {
   const ease = t => 1 - Math.pow(1 - t, 3) * (1 - t) ;               // smooth out, no overshoot
   const ease2 = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   function state() { off.copy(camera.position).sub(controls.target); sph.setFromVector3(off); return { x: controls.target.x, z: controls.target.z, zoom: camera.zoom, th: sph.theta, ph: sph.phi, r: sph.radius }; }
-  function flyTo(to, dur = 1.15) { const a = state(); const b = Object.assign({}, a, to);
+  function flyTo(to, dur = 1.15) { UI.cancelCamera(); cancelFlight(); const a = state(); const b = Object.assign({}, a, to);
     let d = b.th - a.th; d = Math.atan2(Math.sin(d), Math.cos(d)); b.th = a.th + d;              // shortest way round
     F.a = a; F.b = b; F.t = 0; F.dur = RMO ? .01 : dur; F.on = true; targetTo = null; zoomTo = null; }
-  controls.addEventListener('start', () => { F.on = false; });
+  function cancelFlight(){ F.on=false; targetTo=null; zoomTo=null; turnLeft=0; controls.stop?.(); }
+  controls.addEventListener('start', cancelFlight);
   function step(dt) {
     if (F.on) { F.t = Math.min(1, F.t + dt / F.dur); const k = ease2(F.t), A = F.a, B = F.b, L = (p) => A[p] + (B[p] - A[p]) * k;
       controls.target.set(L('x'), 0, L('z')); sph.set(A.r, L('ph'), L('th')); off.setFromSpherical(sph); camera.position.copy(controls.target).add(off);
@@ -2128,14 +2139,15 @@ const THEME = (() => {
   function fitPhoneOverview() {
     if (!touchMap || REC) return;
     const bounds = new THREE.Box3(); BGRP.forEach(g => { if(g) bounds.expandByObject(g); });
-    const c = bounds.getCenter(new THREE.Vector3()); HOME.x=c.x; HOME.z=c.z;
+    const c = P(488,190); HOME.x=c.x; HOME.z=c.z;
     controls.target.set(c.x,0,c.z); sph.set(HOME.r,HOME.ph,HOME.th); camera.position.copy(controls.target).add(off.setFromSpherical(sph));
     camera.zoom=1; camera.updateProjectionMatrix(); camera.lookAt(controls.target); camera.updateMatrixWorld();
     let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
     for(const x of [bounds.min.x,bounds.max.x]) for(const y of [0,bounds.max.y]) for(const z of [bounds.min.z,bounds.max.z]) {
       const p=new THREE.Vector3(x,y,z).project(camera); x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);
     }
-    HOME.zoom=THREE.MathUtils.clamp(Math.min(2*(innerWidth-30)/innerWidth/(x1-x0),2*Math.max(240,innerHeight-310)/innerHeight/(y1-y0)),.8,3);
+    const fit=Math.min(2*(innerWidth-30)/innerWidth/(x1-x0),2*Math.max(240,innerHeight-310)/innerHeight/(y1-y0));
+    HOME.zoom=THREE.MathUtils.clamp(fit*2.05,2.8,4.2);
   }
   fitPhoneOverview();
   if (!QS.has('tour')) { controls.target.set(HOME.x, 0, HOME.z); sph.set(HOME.r, HOME.ph, HOME.th); off.setFromSpherical(sph); camera.position.copy(controls.target).add(off); camera.zoom = HOME.zoom; camera.updateProjectionMatrix(); camera.lookAt(controls.target); }
@@ -2162,13 +2174,11 @@ const THEME = (() => {
     back.classList.add('show'); }
   back.addEventListener('click', () => { const p = before || HOME; closeUp = null; before = null; back.classList.remove('show'); UI.hideTag(); flyTo({ x: p.x, z: p.z, zoom: p.zoom, th: p.th, ph: p.ph }, 1.1); });
   const _show = UI.showTag; UI.showTag = b => { _show(b); if (typeof b === 'number' && !TOUR.on) closeUpOn(b); };
-  // the tag's internal call path: wrap the map tap so building taps also fly in
-  canvas.addEventListener('pointerup', () => setTimeout(() => { const h3 = tagH.textContent; const i = BLD.findIndex(r => r[0] === h3); if (i >= 0 && i !== closeUp && !$('.tag', app).hidden && !TOUR.on && !UI.relS.isOpen) closeUpOn(i); }, 0));
 
   document.addEventListener('ryf:navigate',()=>{back.classList.remove('show');});
   window.__dbg = { BLD, BAKE, camera, canvas, closeUpOn };
   setInterval(() => { app.classList.toggle('sheeton', [UI.cardS, UI.relS, UI.meetS, UI.meS].some(x => x && x.isOpen)); }, 120);
-  return { step, flyTo, closeUpOn, home, touchMap, get heading(){return state().th;}, get closeUp() { return closeUp; } };
+  return { step, flyTo, cancelFlight, closeUpOn, home, touchMap, get heading(){return state().th;}, get closeUp() { return closeUp; } };
 })();
 /* Kit styling, accessible controls, recording desk and browser-local demo state. */
 const POLISH = (() => {
@@ -3158,44 +3168,24 @@ const STORY = (() => {
   return { firstRun, onboard, swarmPick, born, meetHub, matchScene, spotScene, checkin, joint, star, inbox, levelUp, swarmIntro, importFF, notify, released, frame, closeAll, scene, get stack() { return stack; }, SFX };
 })();
 window.STORY = STORY; window.UI = UI;
-/* Direct navigation for touch screens. Geometry and building artwork are unchanged. */
-const EXPLORE = (()=>{
- const app=UI.app, touch=THEME.touchMap;
+/* Gesture hints and compact map controls. Navigation happens directly on the campus. */
+const GESTURES = (()=>{
+ const app=UI.app;
  document.head.insertAdjacentHTML('beforeend',`<style>
- .explore-open{position:absolute;top:calc(151px + env(safe-area-inset-top,0px));left:16px;pointer-events:auto;padding:0 16px!important;height:44px;font-size:13px!important;gap:8px}
- .map-help{position:absolute;left:16px;bottom:143px;max-width:230px;color:#fff4de;font:600 11px/1.5 var(--ui);text-shadow:0 2px 8px #05061a;pointer-events:none;background:#05061acc;padding:8px 11px;border-radius:10px}
- .map-help b{display:block;font-weight:800}.map-help[hidden]{display:none}
- #campus-places{box-sizing:border-box;width:min(460px,calc(100% - 24px));max-height:min(65dvh,560px);padding:20px;margin:auto auto max(110px,env(safe-area-inset-bottom)) auto;border:3px solid #14102e;border-radius:20px;background:#fff4de;color:#14102e;box-shadow:5px 5px 0 #05061a;font-family:Archivo,Arial,sans-serif}
- #campus-places::backdrop{background:#05061a88;backdrop-filter:blur(5px)}
- #campus-places header{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:14px}
- #campus-places h2{font-size:22px;letter-spacing:-.6px;margin:0}#campus-places button{font:700 14px Archivo,Arial,sans-serif;color:inherit;cursor:pointer}
- #campus-places .places-close{border:0;background:transparent;min-width:44px;min-height:44px;font-size:24px}
- #campus-places input{box-sizing:border-box;width:100%;border:2px solid #14102e;border-radius:10px;padding:12px;font:16px Archivo,Arial,sans-serif;color:#14102e;background:#fffaf0;margin-bottom:10px}
- #campus-places .places-list{overflow:auto;max-height:35dvh;overscroll-behavior:contain;display:grid;gap:7px}
- #campus-places .places-list button{border:2px solid #14102e;border-radius:11px;text-align:left;background:#fffaf0;padding:13px 14px;min-height:48px;display:flex;justify-content:space-between;align-items:center}
- #campus-places .places-list button:first-child{background:#ffc84a}#campus-places .places-empty{padding:20px;font-size:14px}
- .mapctl .turns{display:flex}.mapctl .turns button+button{border-top:0;border-left:2px solid var(--ink)}.mapctl .hm{font-size:10px!important;font-weight:800!important;display:flex;flex-direction:column;gap:1px}.mapctl .hm .ic{width:19px;height:19px}
- html.rec .explore-open,html.rec .map-help,html.touring .explore-open,html.touring .map-help,.sheeton .explore-open,.sheeton .map-help{display:none!important}
- @media(max-width:700px){.mapctl button{width:44px;height:44px}.mapctl{right:12px;bottom:128px;gap:6px}.mapctl .cmp{display:none}.mapctl .turns button{width:36px}.mapctl .hm{width:100%}.map-help{max-width:205px}.clockchip{display:none}.backchip{top:calc(151px + env(safe-area-inset-top,0px));left:auto;right:16px;transform:none}}
- @media(min-width:701px){.explore-open{top:160px}.map-help{display:none}.land .explore-open{left:20px}}
+ .map-help{position:absolute;left:50%;top:calc(132px + env(safe-area-inset-top,0px));transform:translateX(-50%);white-space:nowrap;color:#fff4de;font:600 11px/1.4 var(--ui);pointer-events:none;background:#05061acc;padding:8px 12px;border-radius:999px;transition:opacity .35s ease-out}
+ .map-help.used{opacity:0}.mapctl .turns{display:flex}.mapctl .turns button+button{border-top:0;border-left:2px solid var(--ink)}.mapctl .hm{font-size:10px!important;font-weight:800!important;display:flex;flex-direction:column;gap:1px}.mapctl .hm .ic{width:19px;height:19px}
+ html.rec .map-help,html.touring .map-help,.sheeton .map-help{display:none!important}
+ @media(max-width:700px){.mapctl button{width:44px;height:44px}.mapctl{right:12px;bottom:128px;gap:6px}.mapctl .cmp{display:none}.mapctl .turns button{width:36px}.mapctl .hm{width:100%}.clockchip{display:none}.backchip{top:calc(151px + env(safe-area-inset-top,0px));left:auto;right:16px;transform:none}}
+ @media(min-width:701px){.map-help{display:none}}
+ @media(prefers-reduced-motion:reduce){.map-help{transition:none}}
  </style>`);
- const open=document.createElement('button');open.className='btn amber explore-open';open.type='button';open.textContent='Explore campus';open.setAttribute('aria-haspopup','dialog');app.appendChild(open);
- const help=document.createElement('div');help.className='map-help';help.innerHTML='<b>Drag to move. Pinch to zoom.</b>Tap a firefly to see someone’s work.';app.appendChild(help);
- const dialog=document.createElement('dialog');dialog.id='campus-places';dialog.setAttribute('aria-labelledby','places-title');
- dialog.innerHTML='<header><h2 id="places-title">Where to?</h2><button class="places-close" aria-label="Close places">×</button></header><input type="search" placeholder="Find a building" aria-label="Find a building"><div class="places-list"></div>';
- document.body.appendChild(dialog);const list=dialog.querySelector('.places-list'),search=dialog.querySelector('input');
- function add(label,callback){const b=document.createElement('button');b.type='button';b.append(document.createTextNode(label));const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');b.appendChild(arrow);b.onclick=()=>{dialog.close();callback();help.hidden=true;};list.appendChild(b);}
- function populate(){list.replaceChildren();const q=search.value.trim().toLowerCase();if(!q){add('Whole campus',()=>{UI.go('sky');THEME.home();});add('See a sample firefly',()=>{UI.go('sky');UI.openCard(FF.list.find(f=>f.mode!=='flight'));});}if(!q||'alpha zone'.includes(q))add('Alpha Zone',()=>{UI.go('sky');const p=P(470,95);THEME.flyTo({x:p.x,z:p.z,zoom:5},.75);});
- const priority=['Square One','Picasso Block','Turing Block','Fleming Block'];
- const names=new Set();const rows=BLD.map((b,i)=>({name:b[0],i})).filter(b=>{if(names.has(b.name)||!b.name.toLowerCase().includes(q))return false;names.add(b.name);return true;}).sort((a,b)=>{const ai=priority.indexOf(a.name),bi=priority.indexOf(b.name);return(ai<0?99:ai)-(bi<0?99:bi)||a.name.localeCompare(b.name);});
- rows.forEach(b=>add(b.name,()=>{UI.go('sky');UI.showTag(b.i);}));if(!list.children.length){const p=document.createElement('p');p.className='places-empty';p.textContent='Try another building name.';list.appendChild(p);}}
- open.onclick=()=>{search.value='';populate();dialog.showModal();dialog.querySelector('.places-close').focus();};
- search.oninput=populate;dialog.querySelector('.places-close').onclick=()=>dialog.close();dialog.onclick=e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}};
- const mc=app.querySelector('.mapctl'),home=mc.querySelector('.hm');home.insertAdjacentHTML('beforeend','<span>Reset</span>');
+ const help=document.createElement('div');help.className='map-help';help.textContent='Drag to move · pinch to zoom';app.appendChild(help);
+ canvas.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType==='touch')help.classList.add('used');},{passive:true});
+ const mc=app.querySelector('.mapctl'),home=mc.querySelector('.hm');home.setAttribute('aria-label','Reset campus view');home.insertAdjacentHTML('beforeend','<span>Reset</span>');
  const turns=document.createElement('div');turns.className='grp turns';turns.innerHTML='<button type="button" aria-label="Turn campus left">↶</button><button type="button" aria-label="Turn campus right">↷</button>';mc.appendChild(turns);
  [...turns.children].forEach((b,i)=>b.onclick=()=>THEME.flyTo({th:THEME.heading+(i?1:-1)*Math.PI/4},.45));
- canvas.setAttribute('aria-label','Chitkara campus. Drag to move, pinch to zoom, or use Explore campus to choose a building.');
- return {touch,open:()=>open.click()};
+ canvas.setAttribute('aria-label','Chitkara campus. Drag to move and pinch to zoom. Tap a firefly to view the work or tap a building to look closer.');
+ return {};
 })();
 
 /* ================= tour: a scripted ~34 s run for screen recording =================
@@ -3319,7 +3309,7 @@ let fpsN = 0, fpsT = 0, FPS = 60, simTime = 0, lowFrames = 0;
 function loop() { const realDt = clock.getDelta(), dt = Math.min(realDt,.05); const frozen = document.hidden || (TOUR.on && TOUR.paused); if(!frozen)simTime+=dt;const t=simTime;
   if (frozen) { renderFrame(t); requestAnimationFrame(loop); return; }
   stepMotion(dt); TOUR.step(dt); LIFE.step(RMO?0:t, RMO?0:dt);
-  updateCars(RMO?0:dt); updateLife(RMO?0:t,RMO?0:dt); updateCam(dt); UI.frame(t, dt); STORY.frame(t, dt); if(RMO)controls.autoRotate=false; controls.update(); THEME.step(dt); camera.updateMatrixWorld();
+  updateCars(RMO?0:dt); updateLife(RMO?0:t,RMO?0:dt); updateCam(dt); UI.frame(t, dt); STORY.frame(t, dt); if(RMO)controls.autoRotate=false; controls.update(); THEME.step(dt); constrainCamera(); camera.updateMatrixWorld();
   FF.update(t, dt); renderFrame(t);
   fpsN++; fpsT += realDt; if (fpsT > 1) { FPS = fpsN / fpsT; const meter=document.querySelector('.fps-meter');if(meter)meter.textContent='Preview · '+Math.round(FPS)+' fps';lowFrames=FPS<43?lowFrames+1:0;if(lowFrames>=3&&renderer.getPixelRatio()>1){renderer.setPixelRatio(Math.max(1,renderer.getPixelRatio()-.25));dispatchEvent(new Event('resize'));lowFrames=0;} fpsN = 0; fpsT = 0; }
   requestAnimationFrame(loop); }

@@ -29,7 +29,8 @@ const THEME = (() => {
     // Keep a predictable viewing angle. Turning has its own explicit buttons.
     controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
     controls.minPolarAngle = controls.maxPolarAngle = Math.PI / 2 - 32 * Math.PI / 180;
-    controls.panSpeed = .65; controls.zoomSpeed = .8; controls.maxZoom = 10;
+    controls.panSpeed = .85; controls.zoomSpeed = 1; controls.maxZoom = 10;
+    controls.zoomToCursor = false; controls.dampingFactor = .18;
   }
   // keep the post.js idle spin from coming back
   const _ar = setInterval(() => { if (!TOUR.on) controls.autoRotate = false; }, 500);
@@ -50,10 +51,11 @@ const THEME = (() => {
   const ease = t => 1 - Math.pow(1 - t, 3) * (1 - t) ;               // smooth out, no overshoot
   const ease2 = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   function state() { off.copy(camera.position).sub(controls.target); sph.setFromVector3(off); return { x: controls.target.x, z: controls.target.z, zoom: camera.zoom, th: sph.theta, ph: sph.phi, r: sph.radius }; }
-  function flyTo(to, dur = 1.15) { const a = state(); const b = Object.assign({}, a, to);
+  function flyTo(to, dur = 1.15) { UI.cancelCamera(); cancelFlight(); const a = state(); const b = Object.assign({}, a, to);
     let d = b.th - a.th; d = Math.atan2(Math.sin(d), Math.cos(d)); b.th = a.th + d;              // shortest way round
     F.a = a; F.b = b; F.t = 0; F.dur = RMO ? .01 : dur; F.on = true; targetTo = null; zoomTo = null; }
-  controls.addEventListener('start', () => { F.on = false; });
+  function cancelFlight(){ F.on=false; targetTo=null; zoomTo=null; turnLeft=0; controls.stop?.(); }
+  controls.addEventListener('start', cancelFlight);
   function step(dt) {
     if (F.on) { F.t = Math.min(1, F.t + dt / F.dur); const k = ease2(F.t), A = F.a, B = F.b, L = (p) => A[p] + (B[p] - A[p]) * k;
       controls.target.set(L('x'), 0, L('z')); sph.set(A.r, L('ph'), L('th')); off.setFromSpherical(sph); camera.position.copy(controls.target).add(off);
@@ -70,14 +72,15 @@ const THEME = (() => {
   function fitPhoneOverview() {
     if (!touchMap || REC) return;
     const bounds = new THREE.Box3(); BGRP.forEach(g => { if(g) bounds.expandByObject(g); });
-    const c = bounds.getCenter(new THREE.Vector3()); HOME.x=c.x; HOME.z=c.z;
+    const c = P(488,190); HOME.x=c.x; HOME.z=c.z;
     controls.target.set(c.x,0,c.z); sph.set(HOME.r,HOME.ph,HOME.th); camera.position.copy(controls.target).add(off.setFromSpherical(sph));
     camera.zoom=1; camera.updateProjectionMatrix(); camera.lookAt(controls.target); camera.updateMatrixWorld();
     let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
     for(const x of [bounds.min.x,bounds.max.x]) for(const y of [0,bounds.max.y]) for(const z of [bounds.min.z,bounds.max.z]) {
       const p=new THREE.Vector3(x,y,z).project(camera); x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);
     }
-    HOME.zoom=THREE.MathUtils.clamp(Math.min(2*(innerWidth-30)/innerWidth/(x1-x0),2*Math.max(240,innerHeight-310)/innerHeight/(y1-y0)),.8,3);
+    const fit=Math.min(2*(innerWidth-30)/innerWidth/(x1-x0),2*Math.max(240,innerHeight-310)/innerHeight/(y1-y0));
+    HOME.zoom=THREE.MathUtils.clamp(fit*2.05,2.8,4.2);
   }
   fitPhoneOverview();
   if (!QS.has('tour')) { controls.target.set(HOME.x, 0, HOME.z); sph.set(HOME.r, HOME.ph, HOME.th); off.setFromSpherical(sph); camera.position.copy(controls.target).add(off); camera.zoom = HOME.zoom; camera.updateProjectionMatrix(); camera.lookAt(controls.target); }
@@ -104,11 +107,9 @@ const THEME = (() => {
     back.classList.add('show'); }
   back.addEventListener('click', () => { const p = before || HOME; closeUp = null; before = null; back.classList.remove('show'); UI.hideTag(); flyTo({ x: p.x, z: p.z, zoom: p.zoom, th: p.th, ph: p.ph }, 1.1); });
   const _show = UI.showTag; UI.showTag = b => { _show(b); if (typeof b === 'number' && !TOUR.on) closeUpOn(b); };
-  // the tag's internal call path: wrap the map tap so building taps also fly in
-  canvas.addEventListener('pointerup', () => setTimeout(() => { const h3 = tagH.textContent; const i = BLD.findIndex(r => r[0] === h3); if (i >= 0 && i !== closeUp && !$('.tag', app).hidden && !TOUR.on && !UI.relS.isOpen) closeUpOn(i); }, 0));
 
   document.addEventListener('ryf:navigate',()=>{back.classList.remove('show');});
   window.__dbg = { BLD, BAKE, camera, canvas, closeUpOn };
   setInterval(() => { app.classList.toggle('sheeton', [UI.cardS, UI.relS, UI.meetS, UI.meS].some(x => x && x.isOpen)); }, 120);
-  return { step, flyTo, closeUpOn, home, touchMap, get heading(){return state().th;}, get closeUp() { return closeUp; } };
+  return { step, flyTo, cancelFlight, closeUpOn, home, touchMap, get heading(){return state().th;}, get closeUp() { return closeUp; } };
 })();

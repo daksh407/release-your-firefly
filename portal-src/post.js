@@ -55,10 +55,16 @@ function updateCam(dt) {
   const before = controls.target.clone();
   if (targetTo) { controls.target.lerp(targetTo, k); if (controls.target.distanceTo(targetTo) < .5) targetTo = null; }
   if (zoomTo) { camera.zoom += (zoomTo - camera.zoom) * k; camera.updateProjectionMatrix(); if (Math.abs(zoomTo - camera.zoom) < .01) zoomTo = null; }
-  controls.target.x = THREE.MathUtils.clamp(controls.target.x, BOUND.x0, BOUND.x1); controls.target.z = THREE.MathUtils.clamp(controls.target.z, BOUND.z0, BOUND.z1); controls.target.y = 0;
   camera.position.add(controls.target.clone().sub(before));
   NIGHT.value += (nightTo - NIGHT.value) * k; NIGHT_HOOKS.forEach(f => f(NIGHT.value));
   if (window.__fm) window.__fm.uniforms.uNightA.value = NIGHT.value;
+}
+function constrainCamera(){
+  const before=controls.target.clone();
+  controls.target.x=THREE.MathUtils.clamp(controls.target.x,BOUND.x0,BOUND.x1);
+  controls.target.z=THREE.MathUtils.clamp(controls.target.z,BOUND.z0,BOUND.z1);controls.target.y=0;
+  const delta=controls.target.clone().sub(before);camera.position.add(delta);
+  if(delta.lengthSq()>1e-8)controls.stop?.();
 }
 
 /* ================= marker outlines: edge detection on depth + normals, thick silhouettes, thinner creases, slight wobble ================= */

@@ -313,13 +313,15 @@ const UI = (() => {
   /* ---------- camera moves on a critically damped spring ---------- */
   const CAM = { x: spring(0, 'cam', null, .05), z: spring(0, 'cam', null, .05), zm: spring(1, 'cam', null, .0005) };
   function camGo(p, zoom, lift = 0) { targetTo = null; zoomTo = null; controls.autoRotate = false; clearTimeout(window.__ar);
+    if(typeof THEME !== 'undefined') THEME.cancelFlight();
     // lift: keep the point this many px above centre, so an open sheet never covers it
     let x = p[0] ?? p.x, z = p[2] ?? p.z; if (lift && !land) { const zz = zoom || camera.zoom, ppu = zz * innerHeight / (camera.top - camera.bottom);
       const f = new THREE.Vector3(); camera.getWorldDirection(f); f.y = 0; f.normalize(); const k = lift / (ppu * Math.sin(PITCH)); x -= f.x * k; z -= f.z * k; }
     const t = controls.target; CAM.x.set(t.x).to(x); CAM.z.set(t.z).to(z); if (zoom) CAM.zm.set(camera.zoom).to(zoom); if(RMO){const d=new THREE.Vector3(x-controls.target.x,0,z-controls.target.z);controls.target.add(d);camera.position.add(d);if(zoom){camera.zoom=zoom;camera.updateProjectionMatrix();}camera.lookAt(controls.target);}
     window.__ar = setTimeout(() => { if (!TOUR.on) controls.autoRotate = true; }, 12000); }
   function camHome() { if(typeof THEME !== 'undefined') THEME.home(); else camGo(HOMET, HOMEZ); }
-  controls.addEventListener('start', () => [CAM.x, CAM.z, CAM.zm].forEach(s => MOTION.delete(s)));
+  function cancelCamera(){[CAM.x,CAM.z,CAM.zm].forEach(s=>s.set(s.x));}
+  controls.addEventListener('start', cancelCamera);
   function camStep() { if (CAM.x.busy || CAM.z.busy) { const d = new THREE.Vector3(CAM.x.x - controls.target.x, 0, CAM.z.x - controls.target.z); controls.target.add(d); camera.position.add(d); }
     if (CAM.zm.busy) { camera.zoom = CAM.zm.x; camera.updateProjectionMatrix(); } }
 
@@ -500,14 +502,15 @@ const UI = (() => {
   const rc = new THREE.Raycaster(), nd = new THREE.Vector2(); const BMESH = []; BGRP.forEach((g, i) => g && g.traverse(o => { if (o.isMesh) { o.userData.bld = i; BMESH.push(o); } }));
   function buildingAt(x, y) { const r = canvas.getBoundingClientRect(); nd.set((x + STAGE.x - r.left) / r.width * 2 - 1, -((y + STAGE.y - r.top) / r.height) * 2 + 1); rc.setFromCamera(nd, camera); const h = rc.intersectObjects(BAKE.PROXY, false)[0]; return h ? h.object.userData.bld : null; }
   let down = null; const mapPointers=new Set(); let multiTouch=false;
-  canvas.addEventListener('pointerdown', e => { mapPointers.add(e.pointerId); if(mapPointers.size>1)multiTouch=true; down = { x: sx(e), y: sy(e), t: performance.now() }; });
-  canvas.addEventListener('pointerup', e => { mapPointers.delete(e.pointerId); const blocked=multiTouch; if(!mapPointers.size)multiTouch=false; if (!down) return; const x = sx(e), y = sy(e); const tap = !blocked && Math.hypot(x - down.x, y - down.y) < 10 && performance.now() - down.t < 450; down = null; if (tap) mapTap(x, y); });
+  canvas.addEventListener('pointerdown', e => { mapPointers.add(e.pointerId); if(mapPointers.size>1)multiTouch=true; down = { id:e.pointerId,x: sx(e), y: sy(e), t: performance.now(),moved:false }; });
+  canvas.addEventListener('pointermove',e=>{if(down&&Math.hypot(sx(e)-down.x,sy(e)-down.y)>8)down.moved=true;});
+  canvas.addEventListener('pointerup', e => { mapPointers.delete(e.pointerId); const blocked=multiTouch; if(!mapPointers.size)multiTouch=false; if (!down) return; const x = sx(e), y = sy(e); const tap = e.pointerId===down.id && !blocked && !down.moved && performance.now() - down.t < 450; down = null; if (tap) mapTap(x, y); });
   canvas.addEventListener('pointercancel',e=>{mapPointers.delete(e.pointerId);down=null;if(!mapPointers.size)multiTouch=false;});
   function mapTap(x, y) {
     if (relS.isOpen && step === 1) { const b = buildingAt(x, y); if (b !== null) setSpot(b); return; }
     if (cardS.isOpen) return;
     const f = FF.pick(x, y); if (f) { openCard(f); return; }
-    const b = buildingAt(x, y); if (b !== null) showTag(b); else hideTag(); }
+    const b = buildingAt(x, y); if (b !== null) UI.showTag(b); else hideTag(); }
   scrim.addEventListener('click', () => { if (cardS.isOpen) closeCard(); else if (relS.isOpen && step !== 1) relS.close(); });
   addEventListener('keydown', e => { if (e.target.closest && e.target.closest('textarea,input')) return;
     if (e.key === 'Escape') { closeCard(); relS.close(); meetS.close(); meS.close(); hideTag(); }
@@ -525,6 +528,6 @@ const UI = (() => {
   }
   let lastB = null;
   setTab('sky');
-  return { confetti, setTab, hideNav: a => navAway && navAway(a), get tab() { return tab; }, mYou, mSpot, mMeet, bname, go, openCard, closeCard, openRelease, setStep, setSpot, selSw, pickArt, holdStart, holdEnd, glow, openMeet, openMe, swarmNight, showIntro, toast, camGo, camHome, showTag, hideTag, frame, layout, sheets,
+  return { confetti, setTab, hideNav: a => navAway && navAway(a), get tab() { return tab; }, mYou, mSpot, mMeet, bname, go, openCard, closeCard, openRelease, setStep, setSpot, selSw, pickArt, holdStart, holdEnd, glow, openMeet, openMe, swarmNight, showIntro, toast, camGo, camHome, cancelCamera, showTag, hideTag, frame, layout, sheets,
     get cur() { return cur; }, get step() { return step; }, get R() { return R; }, rel, card, meet, me, nav, app, relS, cardS, meetS, meS, $, imin: () => $('.imin', meet).click(), isIn: () => imIn, isNight: () => snOn };
 })();
