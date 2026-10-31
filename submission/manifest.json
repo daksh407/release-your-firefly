@@ -2,7 +2,7 @@
   "name": "Release the Firefly",
   "pdf": "Release-the-Firefly-Submission.pdf",
   "pages": 8,
-  "sha256": "708cab78bfb39a8e0d44626e151a1af492e1de1001c5fe7cf959c28cde71291d",
+  "sha256": "ab1668d65088122a4b6561421e0305445d89be5990dd0cb9ecfc36d43524ba54",
   "links": [
     "https://daksh407.github.io/",
     "https://daksh407.github.io/release-your-firefly/",
@@ -29,6 +29,6 @@
     "short_stream_bytes": 986769,
     "short_stream_sha256": "d50d9e1a1266704e48d06ff928835a3a3bde6c63ec9c573a8988be0c90a53887"
   },
-  "revision": "Original six pages and approved board content preserved; added recovered map studies and original prompts, a map-development page, and poster layouts retaining approved copy; explicit click-to-watch film buttons and click-to-try app link",
-  "bytes": 10896850
+  "revision": "General AI credits replace production-tool lists; layouts, eight pages, film and app links preserved; required Firefly production assets remain pending.",
+  "bytes": 10856459
 }
